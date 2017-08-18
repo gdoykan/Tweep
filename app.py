@@ -31,21 +31,41 @@ def clean_tweet(orig_tweet):
     cleanTweet = ''.join(str(x) for x in cleanTweet)
     return cleanTweet
 
-
-def main():
-
-	results = tweepy.Cursor(api.user_timeline, screen_name=sys.argv[1]).items(number_tweets_to_get)
-	
+#grabs and puts clean and uncleaned tweets in files    
+def grabTweets(results):
 	with open("uncleanedtweets.txt", "w") as unclean_file, open("tweets.txt", "w") as clean_file:
 		 for tweet in results:
 		    tweet.text = tweet.text.encode('utf-8') #encode the string properly
-		    unclean_file.write(tweet.text + '\n')   #create unclean text file   
+		    unclean_file.write('tweet: ' + tweet.text + '\n')   #create unclean text file   
 		    clean_text = clean_tweet(tweet.text)
 		    clean_file.write(clean_text + '\n')     #create clean text file
 		    
 		    #Exclude all retweets
-		    if (not tweet.retweeted) and ('RT @' not in tweet.text):
-		        print(clean_text)
+		    # if (not tweet.retweeted) and ('RT @' not in tweet.text):
+		    #     print(clean_text)
+	
+#count positive words in a single cleaned tweet		  
+def countPositiveWords():
+	#split all tweets into a list of words
+	lines = open('tweets.txt', 'rb').readlines()
+	positiveWords = set(line.strip() for line in open('positiveW.txt'))
+	
+	#find matches of positive words in the tweet
+	for line in lines:
+		words = line.split()
+		count = 0
+		for word in words:
+			if word in positiveWords:
+				count+=1
+		print count
+			
+		  
+		        
+def main():
+	results = tweepy.Cursor(api.user_timeline, screen_name=sys.argv[1]).items(number_tweets_to_get)
+	grabTweets(results);
+	countPositiveWords()
+
 	
 	# 	# The search term you want to find
 	# query = "@realDonaldTrump"
