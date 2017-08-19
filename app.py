@@ -14,7 +14,7 @@ access_secret = 'Mv9XxRjDYohH4YIeCV82biNnKcFxGWj2nEq4SxXl5wD7P'
 auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
 
-number_tweets_to_get = 20
+number_tweets_to_get = 1
 
 api = tweepy.API(auth)
 
@@ -45,26 +45,61 @@ def grabTweets(results):
 		    #     print(clean_text)
 	
 #count positive words in a single cleaned tweet		  
-def countPositiveWords():
-	#split all tweets into a list of words
-	lines = open('tweets.txt', 'rb').readlines()
+def countPositiveWords(line):
 	positiveWords = set(line.strip() for line in open('positiveW.txt'))
 	
 	#find matches of positive words in the tweet
+	words = line.split()
+	count = 0
+	for word in words:
+		if word in positiveWords:
+			count+=1
+	return count
+	
+#count negative words in a single cleaned tweet		  
+def countNegativeWords(line):
+	negativeWords = set(line.strip() for line in open('negativeW.txt'))
+	
+	#find matches of positive words in the tweet
+	words = line.split()
+	count = 0
+	for word in words:
+		if word in negativeWords:
+			count+=1
+	return count
+	
+	
+
+#calculates sentiment for a single tweet
+def calcSentiment(num):
+	
+	#split all tweets into a list of words
+	lines = open('tweets.txt', 'rb').readlines()
+	totalSentiment = 0
 	for line in lines:
-		words = line.split()
-		count = 0
-		for word in words:
-			if word in positiveWords:
-				count+=1
-		print count
-			
+		num_pos_words = countPositiveWords(line)
+		num_neg_words = countNegativeWords(line)
+		if ((num_neg_words == 0) & (num_pos_words == 0)):
+			sentiment = 0
+		else :
+			sentiment = float(num_pos_words - num_neg_words)/float(num_pos_words + num_neg_words)
+		totalSentiment += sentiment
+	averageSentiment = totalSentiment/num
+	print averageSentiment
+		
 		  
 		        
 def main():
-	results = tweepy.Cursor(api.user_timeline, screen_name=sys.argv[1]).items(number_tweets_to_get)
-	grabTweets(results);
-	countPositiveWords()
+	#results = tweepy.Cursor(api.user_timeline, screen_name=sys.argv[1]).items(number_tweets_to_get)
+		# The search term you want to find
+	query = sys.argv[1]
+	# Language code (follows ISO 639-1 standards)
+	language = "en"
+	#number of tweets to get
+	num = 100
+	results = api.search(q=query, lang=language, count=num)
+	grabTweets(results)
+	calcSentiment(num)
 
 	
 	# 	# The search term you want to find
